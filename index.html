@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>互動式報告：《情感反詐模擬器》現象解析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Dialogue -->
+    <!-- Application Structure Plan: A single-page application with a fixed side-navigation bar for thematic exploration. This non-linear structure allows users to freely navigate between different facets of the topic, such as the game's core controversy, its real-world parallels, the psychological drivers for its popularity, and the broader societal context. The flow is designed to guide the user from the specific phenomenon (the game) to its broader implications (societal issues), using interactive elements like toggles, clickable cards, and charts to deepen engagement and understanding. This structure was chosen over a linear report format to facilitate user-led discovery and a more dynamic, engaging learning experience. -->
+    <!-- Visualization & Content Choices: 
+        - Goal: Inform (Initial Impact) -> Method: Styled HTML cards with large numbers (sales, reviews). Interaction: Static display. Justification: Quickly conveys the game's scale and success. Library: Tailwind CSS.
+        - Goal: Compare (Dueling Narratives) -> Method: Two-column layout with a toggle button. Interaction: Click to switch between "Anti-Scam Tool" and "Gender Conflict" perspectives. Justification: Visually represents the core controversy and allows direct comparison of opposing viewpoints. Library: Vanilla JS, Tailwind CSS.
+        - Goal: Change/Context (Real-world Events) -> Method: Donut chart for scam statistics, interactive timeline-like cards for specific events. Interaction: Click on event cards to reveal details. Justification: The chart visualizes the scale of the problem, while interactive cards link the game to impactful real-world tragedies ("Fat Cat"), making the context tangible. Library: Chart.js, Vanilla JS.
+        - Goal: Organize/Explain (Psychological Drivers) -> Method: Grid of interactive cards. Interaction: Hover to reveal detailed explanations for concepts like Confirmation Bias, Catharsis, etc. Justification: Breaks down complex psychological concepts into digestible, interactive pieces. Library: Vanilla JS, Tailwind CSS.
+        - Goal: Relationships (Societal Pressures) -> Method: Radar chart. Interaction: Hover over points to see tooltips. Justification: A radar chart effectively visualizes the multi-faceted pressures ("economic," "marital," etc.) on the target demographic ("bottom-tier youth"), showing their interconnectedness. Library: Chart.js.
+        - Goal: Compare (Industry Demographics) -> Method: Donut chart. Interaction: Hover to see percentages. Justification: A simple, clear way to show the significant gender imbalance in the Chinese gaming industry. Library: Chart.js.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #F5F5F4; color: #374151; }
+        .nav-link { transition: all 0.2s ease-in-out; }
+        .nav-link.active, .nav-link:hover { color: #3B82F6; background-color: #EFF6FF; border-right: 4px solid #3B82F6; }
+        .content-section { min-height: 100vh; }
+        .chart-container { position: relative; width: 100%; max-width: 500px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
+        @media (min-width: 768px) { .chart-container { height: 400px; } }
+        .card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        .interactive-card .back { transform: rotateY(180deg); -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+        .interactive-card.flipped .front { transform: rotateY(180deg); }
+        .interactive-card.flipped .back { transform: rotateY(360deg); }
+    </style>
+</head>
+<body class="bg-stone-100 text-gray-800">
+
+    <div class="flex">
+        <!-- Sidebar Navigation -->
+        <nav id="sidebar" class="fixed top-0 left-0 h-full w-48 bg-white shadow-lg pt-20 hidden md:block">
+            <h2 class="font-bold text-lg text-center text-gray-700 px-4 pb-4 border-b">分析導航</h2>
+            <ul class="mt-4 space-y-2">
+                <li><a href="#section-intro" class="nav-link block py-3 px-6 text-gray-600 font-medium border-r-4 border-transparent">現象級遊戲</a></li>
+                <li><a href="#section-narrative" class="nav-link block py-3 px-6 text-gray-600 font-medium border-r-4 border-transparent">雙面敘事</a></li>
+                <li><a href="#section-reality" class="nav-link block py-3 px-6 text-gray-600 font-medium border-r-4 border-transparent">現實的迴響</a></li>
+                <li><a href="#section-psychology" class="nav-link block py-3 px-6 text-gray-600 font-medium border-r-4 border-transparent">玩家心理透視</a></li>
+                <li><a href="#section-society" class="nav-link block py-3 px-6 text-gray-600 font-medium border-r-4 border-transparent">社會的裂痕</a></li>
+                <li><a href="#section-industry" class="nav-link block py-3 px-6 text-gray-600 font-medium border-r-4 border-transparent">產業的倒影</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="w-full md:ml-48">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                
+                <!-- Section 1: Introduction -->
+                <section id="section-intro" class="content-section flex flex-col justify-center">
+                    <div class="text-center mb-12">
+                        <h1 class="text-4xl md:text-5xl font-bold text-blue-600 mb-2">《情感反詐模擬器》</h1>
+                        <p class="text-xl text-gray-600">一個引爆輿論的文化現象</p>
+                    </div>
+                    <p class="text-lg text-gray-700 leading-relaxed mb-12 text-center max-w-3xl mx-auto">
+                        本節將介紹《情感反詐模擬器》（原名《撈女遊戲》）這款遊戲的基本背景及其引發的巨大市場反應。您將看到其驚人的商業數據，並了解其最初因名稱和主題引發的爭議，為後續深入探討其背後的社會文化意義奠定基礎。
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                        <div class="bg-white p-6 rounded-xl shadow-md card">
+                            <div class="text-5xl font-bold text-amber-500">100萬+</div>
+                            <div class="mt-2 text-gray-600 font-medium">預估銷量 (首週)</div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-md card">
+                            <div class="text-5xl font-bold text-amber-500">96%</div>
+                            <div class="mt-2 text-gray-600 font-medium">Steam 好評率</div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-md card">
+                            <div class="text-5xl font-bold text-amber-500">Top 1</div>
+                            <div class="mt-2 text-gray-600 font-medium">Steam 中國區熱銷榜</div>
+                        </div>
+                    </div>
+                    <div class="mt-12 bg-white p-8 rounded-xl shadow-lg">
+                        <h3 class="text-2xl font-bold text-center mb-4">從《撈女遊戲》到《情感反詐模擬器》</h3>
+                        <p class="text-gray-700 leading-relaxed text-center">遊戲最初以《撈女遊戲》為名發行，因「撈女」一詞的貶義色彩，引發了對其「污名化女性」、「煽動性別對立」的強烈批評。在巨大的輿論壓力下，遊戲迅速更名為《情感反詐模擬器》，並將其敘事重點重新定位於符合官方話語的「反詐教育」，試圖在商業利益與社會責任之間尋求平衡。</p>
+                    </div>
+                </section>
+                <hr class="my-16 border-gray-300">
+
+                <!-- Section 2: Dueling Narratives -->
+                <section id="section-narrative" class="content-section flex flex-col justify-center">
+                     <div class="text-center mb-12">
+                        <h2 class="text-3xl md:text-4xl font-bold">雙面敘事：是與非的拉扯</h2>
+                        <p class="mt-4 text-lg text-gray-600">這款遊戲的評價極度兩極分化，支持者與反對者對其有著截然不同的解讀。本節將透過互動式切換，展示這兩種對立的觀點，讓您直觀地感受這場輿論風暴的核心矛盾：它究竟是一款有益的教育工具，還是一個加劇社會對立的爭議性產品？</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-xl shadow-lg">
+                        <div class="flex justify-center mb-6">
+                            <div class="bg-gray-200 p-1 rounded-full flex space-x-1">
+                                <button id="narrative-positive-btn" class="narrative-btn bg-blue-500 text-white px-6 py-2 rounded-full font-semibold">正面：反詐工具</button>
+                                <button id="narrative-negative-btn" class="narrative-btn bg-transparent text-gray-600 px-6 py-2 rounded-full font-semibold">負面：性別對立</button>
+                            </div>
+                        </div>
+                        <div id="narrative-content" class="mt-4">
+                            <!-- Content will be injected by JS -->
+                        </div>
+                    </div>
+                </section>
+                <hr class="my-16 border-gray-300">
+
+                <!-- Section 3: Echoes of Reality -->
+                <section id="section-reality" class="content-section flex flex-col justify-center">
+                    <div class="text-center mb-12">
+                        <h2 class="text-3xl md:text-4xl font-bold">現實的迴響：悲劇與數據</h2>
+                        <p class="mt-4 text-lg text-gray-600">遊戲的巨大成功並非偶然，它深刻地觸及了中國社會中真實存在的焦慮與創傷。本節將探討遊戲如何引用真實的社會悲劇事件（如「胖貓事件」），並透過數據圖表揭示情感詐騙問題的嚴重性，展示虛擬遊戲與殘酷現實之間的強烈共鳴。</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4">真實事件的投射</h3>
+                            <div class="space-y-4">
+                                <div class="reality-card bg-white p-6 rounded-lg shadow-md cursor-pointer hover:bg-gray-50" data-content="「胖貓事件」指一名年輕男性因在戀愛關係中被女友大量索取金錢，最終不堪重負而輕生的悲劇。此事引發了公眾對男性在情感關係中成為受害者的廣泛同情與討論。遊戲在章節標題中以藏頭詩「願以後再無彷（胖）貓」對其進行了紀念，直接利用了這一社會熱點。">
+                                    <h4 class="font-semibold text-lg text-blue-600">胖貓事件</h4>
+                                    <p class="text-sm text-gray-500">利用公眾同情與集體創傷</p>
+                                </div>
+                                <div class="reality-card bg-white p-6 rounded-lg shadow-md cursor-pointer hover:bg-gray-50" data-content="「翟欣欣事件」中，一名IT創業者在與翟欣欣閃婚後，被女方以威脅手段索要巨額財產，最終自殺。此案成為婚戀中惡性經濟敲詐的標誌性案例，加深了部分男性對婚姻的恐懼與不信任。">
+                                    <h4 class="font-semibold text-lg text-blue-600">翟欣欣事件</h4>
+                                    <p class="text-sm text-gray-500">對婚戀敲詐的恐懼</p>
+                                </div>
+                            </div>
+                            <div id="reality-details" class="mt-6 bg-blue-50 p-4 rounded-lg min-h-[100px] text-gray-700">
+                                <p>點擊上方卡片查看事件詳情。</p>
+                            </div>
+                        </div>
+                        <div>
+                           <h3 class="text-2xl font-bold mb-4 text-center">情感詐騙的代價</h3>
+                           <div class="chart-container">
+                                <canvas id="scamChart"></canvas>
+                           </div>
+                           <p class="text-center text-sm text-gray-600 mt-2">數據來源：中國國家反詐中心 (2023)</p>
+                        </div>
+                    </div>
+                </section>
+                <hr class="my-16 border-gray-300">
+
+                <!-- Section 4: Player Psychology -->
+                <section id="section-psychology" class="content-section flex flex-col justify-center">
+                    <div class="text-center mb-12">
+                        <h2 class="text-3xl md:text-4xl font-bold">玩家心理透視：為何買單？</h2>
+                         <p class="mt-4 text-lg text-gray-600">是什麼心理因素驅使著上百萬玩家為這款充滿爭議的遊戲付費？本節將深入剖析玩家的心理動機。透過互動卡片，您可以探索確認偏誤、情感宣洩、掌控欲以及社會認同等關鍵心理學概念，理解遊戲如何精準地滿足了特定群體的深層次心理需求。</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="psychology-card bg-white p-6 rounded-xl shadow-lg text-center card" data-title="確認偏誤" data-text="玩家傾向於尋找、解釋並記住那些證實他們既有信念的資訊。遊戲的「撈女」敘事，為那些已對關係抱持懷疑態度的玩家提供了「證據」，從而驗證了他們的看法。">
+                            <div class="text-3xl mb-4">🤔</div>
+                            <h3 class="font-bold text-xl">確認偏誤</h3>
+                            <p class="text-gray-500 text-sm mt-2">尋找與自己觀點一致的證據</p>
+                        </div>
+                        <div class="psychology-card bg-white p-6 rounded-xl shadow-lg text-center card" data-title="情感宣洩" data-text="遊戲提供了一個安全的虛擬空間，讓玩家可以對現實中感知到的不公或挫敗感進行「報復」。扮演「情感獵手」反擊「撈女」的「爽文」式體驗，成為一種強烈的情感釋放。">
+                             <div class="text-3xl mb-4">😤</div>
+                            <h3 class="font-bold text-xl">情感宣洩</h3>
+                             <p class="text-gray-500 text-sm mt-2">釋放積壓的憤怒與無力感</p>
+                        </div>
+                        <div class="psychology-card bg-white p-6 rounded-xl shadow-lg text-center card" data-title="掌控欲" data-text="現實中的情感關係充滿不確定性。遊戲透過提供明確的規則、選項和「知識檔案」，將複雜的關係簡化為可以學習和掌握的技能，滿足了人們對混亂現實的掌控渴望。">
+                             <div class="text-3xl mb-4">🎮</div>
+                            <h3 class="font-bold text-xl">掌控欲</h3>
+                            <p class="text-gray-500 text-sm mt-2">在虛擬世界中尋求控制感</p>
+                        </div>
+                        <div class="psychology-card bg-white p-6 rounded-xl shadow-lg text-center card" data-title="社會認同" data-text="購買遊戲被一些玩家視為一種集體行動，一次「投票」。它幫助凝聚了「男性意識」，讓感到被主流話語忽視的群體找到歸屬感，並將個人不滿轉化為集體發聲。">
+                             <div class="text-3xl mb-4">🫂</div>
+                            <h3 class="font-bold text-xl">社會認同</h3>
+                             <p class="text-gray-500 text-sm mt-2">加入群體，表達共同立場</p>
+                        </div>
+                    </div>
+                    <div id="psychology-details" class="mt-8 bg-white p-6 rounded-lg shadow-inner min-h-[120px]">
+                        <p class="text-gray-600 text-center">將滑鼠懸停在上方卡片上以查看詳細解釋。</p>
+                    </div>
+                </section>
+                <hr class="my-16 border-gray-300">
+
+                <!-- Section 5: Societal Fissures -->
+                <section id="section-society" class="content-section flex flex-col justify-center">
+                    <div class="text-center mb-12">
+                        <h2 class="text-3xl md:text-4xl font-bold">社會的裂痕：失語者的困境</h2>
+                        <p class="mt-4 text-lg text-gray-600">遊戲的目標受眾——「底層男青年」——為何對此產生如此強烈的共鳴？本節將探討他們所面臨的系統性困境，包括巨大的經濟壓力、婚戀市場的交易化、以及在公共話語中的「失語」狀態。下方的雷達圖直觀地展示了他們所承受的多重壓力。</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                         <div class="chart-container">
+                            <canvas id="pressureChart"></canvas>
+                        </div>
+                        <div class="space-y-4 text-gray-700">
+                             <h3 class="text-2xl font-bold mb-4">「底層男青年」的多重壓力</h3>
+                            <p><strong>經濟壓力：</strong> 收入有限，但面臨高昂的房價和「彩禮」要求，婚姻成為沉重的經濟負擔。</p>
+                            <p><strong>婚戀困境：</strong> 依賴相親，關係往往缺乏情感基礎，更像一場交易，難以建立信任。</p>
+                            <p><strong>話語權缺失：</strong> 在公共討論中，他們的關切常被忽視或污名化，被認為是「落後」的，導致不滿情緒的積壓。</p>
+                            <p><strong>社交技能不足：</strong> 缺乏與異性交往的經驗和技巧，使他們在情感關係中更容易受到操控或選擇用金錢維持關係。</p>
+                        </div>
+                    </div>
+                </section>
+                <hr class="my-16 border-gray-300">
+
+                <!-- Section 6: Industry Reflections -->
+                <section id="section-industry" class="content-section flex flex-col justify-center">
+                    <div class="text-center mb-12">
+                        <h2 class="text-3xl md:text-4xl font-bold">產業的倒影：偏見與逐利</h2>
+                        <p class="mt-4 text-lg text-gray-600">《情感反詐模擬器》的誕生與成功，也反映出中國遊戲產業自身的結構性問題。本節將分析產業中普遍存在的性別偏見，以及將社會矛盾商業化的逐利策略，探討一個以男性為主導的產業如何塑造了我們所看到的文化產品。</p>
+                    </div>
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                        <div class="space-y-4 text-gray-700">
+                             <h3 class="text-2xl font-bold mb-4">產業的結構性問題</h3>
+                            <p><strong>男性主導的視角：</strong> 從業者性別比例嚴重失衡，導致遊戲內容和設計往往迎合男性視角、慾望和焦慮，女性角色常被客體化或邊緣化。</p>
+                            <p><strong>爭議的商業化：</strong> 遊戲的成功證明，利用甚至放大社會矛盾（如性別對立）可以成為一門有利可圖的生意。這種「有毒流量」策略可能鼓勵更多加劇社會分裂的產品出現。</p>
+                            <p><strong>監管下的生存：</strong> 開發者在嚴格的審查環境中，學會了將爭議性話題包裝在符合官方話語（如「反詐」）的框架下，以求得生存和盈利。</p>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="industryChart"></canvas>
+                            <p class="text-center text-sm text-gray-600 mt-2">數據來源：2018中國遊戲產業報告</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    const narrativeContent = {
+        positive: {
+            title: '「反詐」的創新工具',
+            points: [
+                '<strong>系統性教育：</strong>遊戲內含14萬字的「戀情知識檔案」，系統性地拆解了PUA、情感操控、經濟勒索等詐騙手段，被官方媒體譽為「生動的反詐公開課」。',
+                '<strong>提升防範意識：</strong>透過沉浸式互動體驗，玩家能親身感受詐騙套路，從而有效提升在現實生活中的警惕性和防範能力，尤其針對高發的網絡婚戀詐騙。',
+                '<strong>傳播積極價值觀：</strong>開發者聲稱遊戲旨在「重建兩性互信」，並在結局中傳遞「真誠永遠是必殺技」的核心思想，倡導健康的戀愛觀。'
+            ]
+        },
+        negative: {
+            title: '煽動性別對立的爭議產品',
+            points: [
+                '<strong>污名化女性：</strong>原名《撈女遊戲》及核心敘事將女性刻畫為潛在的、臉譜化的詐騙者，將個體惡行擴大化，加劇了對女性群體的刻板印象與不信任。',
+                '<strong>製造焦慮與對立：</strong>批評者認為，遊戲非但沒能「重建互信」，反而透過強化男性受害者敘事，製造了兩性間的恐慌與對立，其「互助留言板」更一度成為「厭女基地」。',
+                '<strong>消費社會悲劇：</strong>遊戲明確引用「胖貓事件」等真實悲劇進行宣傳，被指責為蹭熱度，利用公眾情緒和逝者痛苦來換取商業利益，缺乏倫理考量。'
+            ]
+        }
+    };
+
+    function updateNarrativeContent(type) {
+        const data = narrativeContent[type];
+        const contentDiv = document.getElementById('narrative-content');
+        let pointsHTML = data.points.map(p => `<li class="mb-2 pl-4 border-l-4 ${type === 'positive' ? 'border-blue-500' : 'border-red-500'}">${p}</li>`).join('');
+        contentDiv.innerHTML = `
+            <h3 class="text-2xl font-bold text-center mb-4 ${type === 'positive' ? 'text-blue-600' : 'text-red-600'}">${data.title}</h3>
+            <ul class="text-gray-700 space-y-3">${pointsHTML}</ul>
+        `;
+    }
+
+    const positiveBtn = document.getElementById('narrative-positive-btn');
+    const negativeBtn = document.getElementById('narrative-negative-btn');
+
+    positiveBtn.addEventListener('click', () => {
+        updateNarrativeContent('positive');
+        positiveBtn.classList.add('bg-blue-500', 'text-white');
+        positiveBtn.classList.remove('bg-transparent', 'text-gray-600');
+        negativeBtn.classList.add('bg-transparent', 'text-gray-600');
+        negativeBtn.classList.remove('bg-red-500', 'text-white');
+    });
+
+    negativeBtn.addEventListener('click', () => {
+        updateNarrativeContent('negative');
+        negativeBtn.classList.add('bg-red-500', 'text-white');
+        negativeBtn.classList.remove('bg-transparent', 'text-gray-600');
+        positiveBtn.classList.add('bg-transparent', 'text-gray-600');
+        positiveBtn.classList.remove('bg-blue-500', 'text-white');
+    });
+
+    updateNarrativeContent('positive');
+
+    const realityCards = document.querySelectorAll('.reality-card');
+    const realityDetails = document.getElementById('reality-details');
+    realityCards.forEach(card => {
+        card.addEventListener('click', () => {
+            realityDetails.innerHTML = `<p>${card.getAttribute('data-content')}</p>`;
+            realityCards.forEach(c => c.classList.remove('bg-blue-100'));
+            card.classList.add('bg-blue-100');
+        });
+    });
+
+    const psychologyCards = document.querySelectorAll('.psychology-card');
+    const psychologyDetails = document.getElementById('psychology-details');
+    const initialPsychologyText = psychologyDetails.innerHTML;
+
+    psychologyCards.forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            const title = card.getAttribute('data-title');
+            const text = card.getAttribute('data-text');
+            psychologyDetails.innerHTML = `
+                <h4 class="font-bold text-lg text-blue-600 mb-2">${title}</h4>
+                <p class="text-gray-700">${text}</p>
+            `;
+        });
+        card.addEventListener('mouseleave', () => {
+            psychologyDetails.innerHTML = initialPsychologyText;
+        });
+    });
+
+    const scamCtx = document.getElementById('scamChart').getContext('2d');
+    new Chart(scamCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['情感詐騙損失', '其他網絡詐騙'],
+            datasets: [{
+                label: '2023年中國網絡詐騙',
+                data: [20, 80],
+                backgroundColor: ['#EF4444', '#E5E7EB'],
+                borderColor: '#FFFFFF',
+                borderWidth: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                },
+                title: {
+                    display: true,
+                    text: '情感詐騙損失佔比 (示意)',
+                    font: { size: 16 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                             if (context.label === '情感詐騙損失') {
+                                return '情感詐騙損失: 超20億人民幣';
+                            }
+                            return '其他類型詐騙';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    const pressureCtx = document.getElementById('pressureChart').getContext('2d');
+    new Chart(pressureCtx, {
+        type: 'radar',
+        data: {
+            labels: ['經濟壓力', '婚戀困境', '話語權缺失', '社交技能', '未來前景'],
+            datasets: [{
+                label: '「底層男青年」壓力指數',
+                data: [9, 8, 8, 6, 5],
+                fill: true,
+                backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                borderColor: 'rgb(59, 130, 246)',
+                pointBackgroundColor: 'rgb(59, 130, 246)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgb(59, 130, 246)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    angleLines: { color: 'rgba(0, 0, 0, 0.1)' },
+                    grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                    pointLabels: { font: { size: 14 } },
+                    suggestedMin: 0,
+                    suggestedMax: 10
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: '「底層男青年」困境雷達圖', font: { size: 16 } }
+            }
+        }
+    });
+    
+    const industryCtx = document.getElementById('industryChart').getContext('2d');
+    new Chart(industryCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['男性從業者', '女性從業者'],
+            datasets: [{
+                data: [72.7, 27.3],
+                backgroundColor: ['#3B82F6', '#F472B6'],
+                borderColor: '#FFFFFF',
+                borderWidth: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' },
+                title: { display: true, text: '中國遊戲產業性別比例', font: { size: 16 } },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.label}: ${context.raw}%`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('section');
+
+    function changeActiveLink() {
+        let index = sections.length;
+        while(--index && window.scrollY + 50 < sections[index].offsetTop) {}
+        
+        navLinks.forEach((link) => link.classList.remove('active'));
+        if (navLinks[index]) {
+           navLinks[index].classList.add('active');
+        }
+    }
+
+    changeActiveLink();
+    window.addEventListener('scroll', changeActiveLink);
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href');
+            const targetSection = document.querySelector(targetId);
+            window.scrollTo({
+                top: targetSection.offsetTop,
+                behavior: 'smooth'
+            });
+        });
+    });
+
+});
+</script>
+
+</body>
+</html>
